@@ -1,0 +1,836 @@
+/* ================================================================
+   TURNOS APP — styles.css
+   Aesthetic: Barbería de lujo — oscuro, dorado, tipografía editorial
+   Autor: Sistema de turnos reutilizable
+================================================================ */
+
+/* ── Variables CSS: el "tema" de la app ──────────────────────────
+   Cambiar estos valores cambia TODO el diseño de una sola vez.
+   Esto es lo que hace el sistema reutilizable visualmente.
+──────────────────────────────────────────────────────────────── */
+:root {
+  --bg-main:       #0e0e0e;      /* Fondo principal (casi negro) */
+  --bg-card:       #161616;      /* Fondo de tarjetas */
+  --bg-elevated:   #1f1f1f;      /* Fondo de elementos elevados */
+  --border:        #2a2a2a;      /* Color de bordes sutiles */
+
+  --accent:        #c9a84c;      /* Dorado — color de marca */
+  --accent-light:  #e2c97e;      /* Dorado claro (hover) */
+  --accent-dim:    rgba(201,168,76,0.12); /* Dorado transparente (fondos) */
+
+  --text-primary:  #f0ece4;      /* Texto principal (crema) */
+  --text-secondary:#8a8580;      /* Texto secundario (gris cálido) */
+  --text-muted:    #4a4845;      /* Texto muy apagado */
+
+  --success:       #4caf7d;      /* Verde confirmación */
+  --danger:        #c94c4c;      /* Rojo error/eliminar */
+
+  --radius-sm:     8px;
+  --radius-md:     14px;
+  --radius-lg:     20px;
+
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.4);
+  --shadow-accent: 0 0 20px rgba(201,168,76,0.15);
+
+  --font-display:  'Playfair Display', serif;   /* Para títulos */
+  --font-body:     'DM Sans', sans-serif;        /* Para todo lo demás */
+
+  --transition:    0.2s ease;
+}
+
+/* ── Reset y base ────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Textura de ruido sutil para dar profundidad al fondo */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
+
+/* Clase utilitaria para ocultar elementos */
+.hidden {
+  display: none !important;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(14,14,14,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  color: var(--accent);
+  font-size: 18px;
+  /* Rotación animada suave */
+  display: inline-block;
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.btn-admin {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.03em;
+}
+
+.btn-admin:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── MAIN CONTENT ────────────────────────────────────────────── */
+.main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ── HERO ────────────────────────────────────────────────────── */
+.hero {
+  padding: 52px 0 44px;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 8vw, 56px); /* Se adapta al ancho de pantalla */
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 300;
+}
+
+/* ── SECCIONES DE PASO ───────────────────────────────────────── */
+.step-section {
+  margin-bottom: 48px;
+  /* Animación de aparición */
+  animation: fade-up 0.4s ease both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-num {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  background: var(--accent-dim);
+  border: 1px solid rgba(201,168,76,0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── SERVICIOS ───────────────────────────────────────────────── */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.service-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::before {
+  /* Brillo en hover */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.service-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-accent);
+}
+
+.service-card:hover::before {
+  opacity: 1;
+}
+
+/* Tarjeta seleccionada */
+.service-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: var(--shadow-accent);
+}
+
+.service-card.selected::after {
+  /* Checkmark en la esquina */
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.service-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.service-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.service-duration {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.service-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+/* ── SELECTOR DE FECHA ───────────────────────────────────────── */
+.date-picker-wrapper {
+  margin-bottom: 24px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.date-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  max-width: 280px;
+  outline: none;
+  transition: border-color var(--transition);
+  /* Fix para el icono del calendario en tema oscuro */
+  color-scheme: dark;
+}
+
+.date-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* ── GRILLA DE HORARIOS ──────────────────────────────────────── */
+.slots-hint {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 10px;
+}
+
+.slot-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.slot-btn:hover:not(.taken) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.slot-btn.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0e0e0e;
+  font-weight: 700;
+}
+
+/* Turno ya ocupado: no se puede clickear */
+.slot-btn.taken {
+  background: transparent;
+  border-color: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* ── RESUMEN DE SELECCIÓN ────────────────────────────────────── */
+.selection-summary {
+  background: var(--accent-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.selection-summary strong {
+  color: var(--accent);
+}
+
+/* ── FORMULARIO ──────────────────────────────────────────────── */
+.form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  width: 100%;
+}
+
+.field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.field-textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.optional-tag {
+  color: var(--text-muted);
+  font-weight: 300;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--danger);
+  padding-left: 2px;
+}
+
+/* ── BOTÓN CONFIRMAR ─────────────────────────────────────────── */
+.btn-confirm {
+  background: var(--accent);
+  color: #0e0e0e;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 16px 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-confirm:hover {
+  background: var(--accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+}
+
+.btn-confirm:active {
+  transform: translateY(0);
+}
+
+.btn-arrow {
+  font-size: 18px;
+  transition: transform var(--transition);
+}
+
+.btn-confirm:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* ── MODAL DE CONFIRMACIÓN ───────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), var(--shadow-accent);
+  animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.modal-details {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 2;
+  margin-bottom: 28px;
+}
+
+.modal-details strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-whatsapp {
+  display: block;
+  background: #25D366;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 20px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all var(--transition);
+  letter-spacing: 0.02em;
+}
+
+.btn-whatsapp:hover {
+  background: #1ebe5d;
+  transform: translateY(-1px);
+}
+
+.btn-new-booking {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 13px 20px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-new-booking:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* ── PANEL DE ADMINISTRACIÓN ─────────────────────────────────── */
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 300;
+  display: flex;
+  justify-content: flex-end;
+  animation: fade-in 0.2s ease;
+}
+
+.admin-panel {
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  width: min(460px, 100vw);
+  height: 100vh;
+  overflow-y: auto;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: slide-from-right 0.3s ease;
+}
+
+@keyframes slide-from-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.admin-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-close:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.admin-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-clear-filter {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all var(--transition);
+}
+
+.btn-clear-filter:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── TARJETAS DE TURNOS EN EL ADMIN ──────────────────────────── */
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.admin-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 32px 0;
+  font-style: italic;
+}
+
+.booking-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  transition: border-color var(--transition);
+}
+
+.booking-card:hover {
+  border-color: rgba(201,168,76,0.2);
+}
+
+.booking-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.booking-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.booking-service-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(201,168,76,0.2);
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.booking-datetime {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.booking-contact {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.booking-notes {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.btn-delete-booking {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-delete-booking:hover {
+  color: var(--danger);
+  background: rgba(201, 76, 76, 0.1);
+}
+
+/* ── BOTÓN BORRAR TODOS ───────────────────────────────────────── */
+.btn-delete-all {
+  background: transparent;
+  border: 1px solid rgba(201,76,76,0.3);
+  color: var(--danger);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-top: auto;
+}
+
+.btn-delete-all:hover {
+  background: rgba(201,76,76,0.1);
+  border-color: var(--danger);
+}
+
+/* ── RESPONSIVE: MOBILE ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .hero {
+    padding: 36px 0 28px;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .form-card {
+    padding: 20px 16px;
+  }
+
+  .modal-card {
+    padding: 28px 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
