@@ -16,7 +16,7 @@ const WHITE_LABEL = {
     name:    'Turnos',
     version: '3.0.0',
   },
-  activeBusinessId: "biz_002", // null = multi-negocio
+  activeBusinessId: "biz_001", // null = multi-negocio
   app: {
     whatsappNumber: '5493513824513',
     maxAdvanceDays: 30,
