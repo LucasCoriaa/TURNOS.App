@@ -1,32 +1,10 @@
 /* ================================================================
-   db.js — CAPA DE DATOS (Multi-negocio)
-   
-   Esta capa abstrae completamente el almacenamiento.
-   Hoy usa localStorage. Mañana, reemplazás las funciones
-   con llamadas fetch() a tu API y el resto del código
-   no cambia en absoluto. Eso es arquitectura escalable.
-   
-   MODELO DE DATOS:
-   ┌─────────────────────────────────────────────────────┐
-   │  businesses[]   → catálogo de negocios registrados  │
-   │  bookings[]     → todos los turnos de todos los biz │
-   │                   cada booking tiene un businessId  │
-   └─────────────────────────────────────────────────────┘
-================================================================ */
-
-/* ── Negocios de demo (datos semilla) ────────────────────────── */
-/* ================================================================
-   db.js — DATOS Y LÓGICA DE NEGOCIO
-================================================================ */
-
-
- /* ================================================================
    db.js — DATOS Y LÓGICA DE NEGOCIO
 ================================================================ */
 
 const SEED_BUSINESSES = [
   {
-    id:       'biz_001',
+     id:       'biz_001',
     name:     'LuchitoRealG4Life',
     category: 'Barbería',
     emoji:    '✂️',
@@ -52,16 +30,16 @@ const SEED_BUSINESSES = [
       { id: 's4', name: 'Corte para niños',duration: 30, price: 10000, icon: '👦', active: true },
     ],
     theme: {
-      accent:      '#c9a84c',
-      accentLight: '#e2c97e',
-      accentDim:   'rgba(201,168,76,0.12)',
-      bgMain:      '#0e0e0e',
-      bgCard:      '#161616',
-      bgElevated:  '#1f1f1f',
-      border:      '#2a2a2a',
-      textPrimary: '#f0ece4',
-      textSecondary:'#8a8580',
-      textMuted:   '#4a4845',
+      accent:        '#c9a84c',   // Dorado
+      accentLight:   '#e2c97e',
+      accentDim:     'rgba(201,168,76,0.12)',
+      bgMain:        '#0e0e0e',
+      bgCard:        '#161616',
+      bgElevated:    '#1f1f1f',
+      border:        '#2a2a2a',
+      textPrimary:   '#f0ece4',
+      textSecondary: '#8a8580',
+      textMuted:     '#4a4845',
     },
     createdAt: '2024-01-01T00:00:00.000Z',
   },
@@ -85,16 +63,16 @@ const SEED_BUSINESSES = [
       { id: 's3', name: 'Ecografía',         duration: 40, price: 8000, icon: '🔬', active: true },
     ],
     theme: {
-      accent:      '#c9a84c',
-      accentLight: '#e2c97e',
-      accentDim:   'rgba(201,168,76,0.12)',
-      bgMain:      '#0e0e0e',
-      bgCard:      '#161616',
-      bgElevated:  '#1f1f1f',
-      border:      '#2a2a2a',
-      textPrimary: '#f0ece4',
-      textSecondary:'#8a8580',
-      textMuted:   '#4a4845',
+      accent:        '#e8458a',   // Rosa fucsia principal
+      accentLight:   '#f472b6',   // Rosa claro (hover)
+      accentDim:     'rgba(232,69,138,0.12)',
+      bgMain:        '#0f0a0d',   // Negro con tono rosa muy sutil
+      bgCard:        '#1a1018',
+      bgElevated:    '#231520',
+      border:        '#3a1f30',
+      textPrimary:   '#fce7f3',   // Blanco rosado
+      textSecondary: '#9e7a8e',
+      textMuted:     '#5c3d50',
     },
     createdAt: '2024-01-15T00:00:00.000Z',
   },
@@ -119,23 +97,32 @@ const SEED_BUSINESSES = [
       { id: 's4', name: 'Lifting de cejas',  duration: 90, price: 9500, icon: '👁️', active: true },
     ],
     theme: {
-      accent:      '#c9a84c',
-      accentLight: '#e2c97e',
-      accentDim:   'rgba(201,168,76,0.12)',
-      bgMain:      '#0e0e0e',
-      bgCard:      '#161616',
-      bgElevated:  '#1f1f1f',
-      border:      '#2a2a2a',
-      textPrimary: '#f0ece4',
-      textSecondary:'#8a8580',
-      textMuted:   '#4a4845',
+      accent:        '#e8458a',   // Rosa fucsia principal
+      accentLight:   '#f472b6',   // Rosa claro (hover)
+      accentDim:     'rgba(232,69,138,0.12)',
+      bgMain:        '#0f0a0d',   // Negro con tono rosa muy sutil
+      bgCard:        '#1a1018',
+      bgElevated:    '#231520',
+      border:        '#3a1f30',
+      textPrimary:   '#fce7f3',   // Blanco rosado
+      textSecondary: '#9e7a8e',
+      textMuted:     '#5c3d50',
     },
     createdAt: '2024-02-01T00:00:00.000Z',
   },
 ];
 
-/* ── Al cargar la página, SIEMPRE resetea con los datos del archivo ── */
-localStorage.setItem('rf_businesses', JSON.stringify(SEED_BUSINESSES));
+/* ── Versión de los datos ─────────────────────────────────────────────
+   Cambiá DATA_VERSION cada vez que modifiques SEED_BUSINESSES.
+   El navegador va a detectar el cambio y limpiar el caché solo.
+───────────────────────────────────────────────────────────────────── */
+const DATA_VERSION = 'v6';
+
+if (localStorage.getItem('rf_data_version') !== DATA_VERSION) {
+  localStorage.clear();
+  localStorage.setItem('rf_businesses', JSON.stringify(SEED_BUSINESSES));
+  localStorage.setItem('rf_data_version', DATA_VERSION);
+}
 
 /* ================================================================
    BUSINESSES

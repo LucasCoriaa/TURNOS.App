@@ -14,15 +14,23 @@ let APP = {
 function init() {
   const businesses = getBusinesses().filter(b => b.active);
 
-  // Mostrar selector multi-negocio
-  document.getElementById('biz-selector-wrap').classList.remove('hidden');
-
-  // Cargar el primero por defecto
-  if (businesses.length > 0) loadBusiness(businesses[0]);
+  // Si hay un negocio fijo configurado, cargarlo directamente
+  // y OCULTAR el selector para que el cliente no pueda cambiar
+  if (WHITE_LABEL.activeBusinessId) {
+    const biz = getBusinessById(WHITE_LABEL.activeBusinessId);
+    if (biz) loadBusiness(biz);
+    // El selector queda hidden (no se muestra)
+  } else {
+    // Modo multi-negocio: mostrar selector
+    document.getElementById('biz-selector-wrap').classList.remove('hidden');
+    if (businesses.length > 0) loadBusiness(businesses[0]);
+  }
 
   document.getElementById('date-input').min = todayString();
   attachEvents();
 }
+
+ 
 
 /* ── CARGAR NEGOCIO ──────────────────────────────────────────── */
 function loadBusiness(biz) {
@@ -38,6 +46,20 @@ function loadBusiness(biz) {
   document.getElementById('biz-sel-emoji').textContent = biz.emoji;
   document.getElementById('biz-sel-label').textContent = biz.name;
   document.title = biz.name + ' — Turnos';
+
+// Aplicar tema del negocio
+const root = document.documentElement;
+const t = biz.theme;
+root.style.setProperty('--accent',         t.accent);
+root.style.setProperty('--accent-light',   t.accentLight);
+root.style.setProperty('--accent-dim',     t.accentDim);
+root.style.setProperty('--bg-main',        t.bgMain);
+root.style.setProperty('--bg-card',        t.bgCard);
+root.style.setProperty('--bg-elevated',    t.bgElevated);
+root.style.setProperty('--border',         t.border);
+root.style.setProperty('--text-primary',   t.textPrimary);
+root.style.setProperty('--text-secondary', t.textSecondary);
+root.style.setProperty('--text-muted',     t.textMuted);
 
   // Hero
   document.getElementById('hero-eyebrow').textContent  = biz.emoji + ' ' + biz.category;
