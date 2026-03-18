@@ -2,164 +2,179 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <!-- Hace que el sitio se vea bien en celulares -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Turnos App</title>
-
-  <!-- Google Fonts: Playfair Display para títulos (elegante) + DM Sans para texto -->
+  <title>Turnos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap"
-    rel="stylesheet"
-  />
-
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
 
-  <!-- ============================================================
-       HEADER: Logo y nombre del negocio (configurable en app.js)
-  ============================================================ -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">✦</span>
-        <span class="logo-text" id="business-name">Barber & Co.</span>
+      <a class="brand" href="#">
+        <div class="brand-icon" id="brand-icon">📅</div>
+        <div>
+          <div class="brand-name" id="brand-name">Turnos</div>
+          <div class="brand-cat"  id="brand-cat"></div>
+        </div>
+      </a>
+      <div class="header-actions">
+        <div class="biz-selector-wrap hidden" id="biz-selector-wrap">
+          <button class="biz-selector-btn" id="biz-selector-btn">
+            <span class="biz-emoji" id="biz-sel-emoji">📅</span>
+            <span class="biz-label" id="biz-sel-label">Elegir negocio</span>
+            <span class="chevron">▼</span>
+          </button>
+          <div class="biz-dropdown hidden" id="biz-dropdown"></div>
+        </div>
+        <button class="btn btn-ghost" id="btn-open-admin">⚙ Admin</button>
       </div>
-      <!-- Botón para ir al panel de administración -->
-      <button class="btn-admin" id="btn-open-admin">Panel Admin</button>
     </div>
   </header>
 
-  <!-- ============================================================
-       VISTA PRINCIPAL: Formulario de reserva (3 pasos)
-  ============================================================ -->
-  <main class="main">
+  <main class="page-wrap">
 
-    <!-- Título principal -->
     <section class="hero">
-      <p class="hero-eyebrow">Reservá tu turno</p>
-      <h1 class="hero-title">¿Cuándo nos vemos?</h1>
-      <p class="hero-subtitle" id="business-tagline">Servicio profesional a tu ritmo</p>
+      <span class="hero-eyebrow" id="hero-eyebrow">📅 Reservas online</span>
+      <h1 class="hero-title"    id="hero-title">Reservá tu turno</h1>
+      <p  class="hero-subtitle" id="hero-subtitle">Seleccioná un servicio, fecha y horario.</p>
     </section>
 
-    <!-- ── PASO 1: Elegir servicio ── -->
     <section class="step-section" id="step-service">
-      <h2 class="step-title"><span class="step-num">01</span> Elegí tu servicio</h2>
-      <!-- Las tarjetas de servicios se generan dinámicamente desde app.js -->
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h2 class="step-title">Elegí un servicio</h2>
+      </div>
       <div class="services-grid" id="services-grid"></div>
     </section>
 
-    <!-- ── PASO 2: Elegir fecha y hora ── -->
     <section class="step-section hidden" id="step-datetime">
-      <h2 class="step-title"><span class="step-num">02</span> Elegí fecha y hora</h2>
-
-      <!-- Selector de fecha (solo días desde hoy) -->
-      <div class="date-picker-wrapper">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h2 class="step-title">Elegí fecha y hora</h2>
+      </div>
+      <div class="date-picker-wrap">
         <label class="field-label" for="date-input">Fecha</label>
-        <input type="date" id="date-input" class="date-input" />
+        <input type="date" id="date-input" class="field-input" />
       </div>
-
-      <!-- Grilla de horarios disponibles (generada en JS) -->
-      <div class="slots-wrapper">
-        <p class="slots-hint" id="slots-hint">Seleccioná una fecha para ver los turnos disponibles.</p>
-        <div class="slots-grid" id="slots-grid"></div>
-      </div>
+      <p class="slots-hint" id="slots-hint">Seleccioná una fecha para ver los turnos disponibles.</p>
+      <div class="slots-grid" id="slots-grid"></div>
     </section>
 
-    <!-- ── PASO 3: Formulario de datos personales ── -->
     <section class="step-section hidden" id="step-form">
-      <h2 class="step-title"><span class="step-num">03</span> Tus datos</h2>
-
-      <!-- Resumen de lo elegido hasta ahora -->
-      <div class="selection-summary" id="selection-summary"></div>
-
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h2 class="step-title">Tus datos</h2>
+      </div>
+      <div class="selection-pills" id="selection-pills"></div>
       <div class="form-card">
-        <!-- Nombre (obligatorio) -->
-        <div class="field-group">
-          <label class="field-label" for="input-name">Nombre completo *</label>
-          <input type="text" id="input-name" class="field-input" placeholder="Ej: Juan Pérez" />
-          <span class="field-error hidden" id="error-name">Ingresá tu nombre</span>
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-label" for="inp-name">Nombre *</label>
+            <input type="text"  id="inp-name"  class="field-input" placeholder="Tu nombre" />
+            <span class="field-error hidden" id="err-name">⚠ Ingresá tu nombre</span>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="inp-phone">Teléfono *</label>
+            <input type="tel"   id="inp-phone" class="field-input" placeholder="351 123 4567" />
+            <span class="field-error hidden" id="err-phone">⚠ Teléfono inválido</span>
+          </div>
+          <div class="field-group full">
+            <label class="field-label" for="inp-email">Email <span class="optional-tag">(opcional)</span></label>
+            <input type="email" id="inp-email" class="field-input" placeholder="tu@email.com" />
+          </div>
+          <div class="field-group full">
+            <label class="field-label" for="inp-notes">Notas <span class="optional-tag">(opcional)</span></label>
+            <textarea id="inp-notes" class="field-input" placeholder="Algo que quieras aclararnos…"></textarea>
+          </div>
         </div>
-
-        <!-- Teléfono (obligatorio) -->
-        <div class="field-group">
-          <label class="field-label" for="input-phone">Teléfono *</label>
-          <input type="tel" id="input-phone" class="field-input" placeholder="Ej: 351 123 4567" />
-          <span class="field-error hidden" id="error-phone">Ingresá un teléfono válido</span>
-        </div>
-
-        <!-- Email (opcional) -->
-        <div class="field-group">
-          <label class="field-label" for="input-email">Email <span class="optional-tag">(opcional)</span></label>
-          <input type="email" id="input-email" class="field-input" placeholder="tu@email.com" />
-        </div>
-
-        <!-- Notas adicionales -->
-        <div class="field-group">
-          <label class="field-label" for="input-notes">Notas <span class="optional-tag">(opcional)</span></label>
-          <textarea id="input-notes" class="field-input field-textarea" placeholder="Algo que quieras aclararnos..."></textarea>
-        </div>
-
-        <button class="btn-confirm" id="btn-confirm">
-          Confirmar turno <span class="btn-arrow">→</span>
-        </button>
+        <button class="btn btn-primary btn-lg" id="btn-confirm">Confirmar turno →</button>
       </div>
     </section>
 
   </main>
 
-  <!-- ============================================================
-       MODAL: Confirmación del turno
-  ============================================================ -->
+  <!-- Modal confirmación -->
   <div class="modal-overlay hidden" id="modal-confirm">
     <div class="modal-card">
-      <div class="modal-icon">✓</div>
+      <div class="modal-ring">✓</div>
       <h2 class="modal-title">¡Turno confirmado!</h2>
-      <!-- Detalle del turno (generado en JS) -->
-      <div class="modal-details" id="modal-details"></div>
-
+      <p  class="modal-sub">Te esperamos. ¡Hasta pronto!</p>
+      <div class="modal-detail-card" id="modal-details"></div>
       <div class="modal-actions">
-        <!-- Genera mensaje de WhatsApp con los datos del turno -->
-        <a class="btn-whatsapp" id="btn-whatsapp" href="#" target="_blank">
-          Enviar por WhatsApp
-        </a>
-        <button class="btn-new-booking" id="btn-new-booking">Nueva reserva</button>
+        <a class="btn-whatsapp" id="btn-whatsapp" href="#" target="_blank">📲 Enviar por WhatsApp</a>
+        <button class="btn btn-ghost" id="btn-new-booking">Hacer otra reserva</button>
       </div>
     </div>
   </div>
 
-  <!-- ============================================================
-       PANEL DE ADMINISTRACIÓN (overlay lateral)
-  ============================================================ -->
-  <div class="admin-overlay hidden" id="admin-panel">
-    <div class="admin-panel">
-
-      <div class="admin-header">
-        <h2 class="admin-title">Panel de administración</h2>
-        <button class="admin-close" id="btn-close-admin">✕</button>
+  <!-- Panel admin -->
+  <div class="admin-overlay hidden" id="admin-overlay">
+    <div class="admin-drawer">
+      <div class="drawer-header">
+        <h2 class="drawer-title">Administración</h2>
+        <button class="drawer-close" id="btn-close-admin">✕</button>
+      </div>
+      <div class="drawer-tabs">
+        <button class="drawer-tab active" data-tab="bookings">Turnos</button>
+        <button class="drawer-tab"        data-tab="services">Servicios</button>
+        <button class="drawer-tab"        data-tab="stats">Estadísticas</button>
       </div>
 
-      <!-- Filtro por fecha (opcional) -->
-      <div class="admin-filters">
-        <label class="field-label" for="admin-filter-date">Filtrar por fecha</label>
-        <input type="date" id="admin-filter-date" class="date-input" />
-        <button class="btn-clear-filter" id="btn-clear-filter">Ver todos</button>
+      <!-- Tab Turnos -->
+      <div class="drawer-body" id="tab-bookings">
+        <div class="filter-row">
+          <div class="field-group" style="flex:1">
+            <label class="field-label" for="admin-date-filter">Filtrar por fecha</label>
+            <input type="date" id="admin-date-filter" class="field-input" />
+          </div>
+          <button class="btn btn-ghost" id="btn-clear-filter" style="flex-shrink:0">Ver todos</button>
+        </div>
+        <p id="admin-count" style="font-size:12px;color:var(--text-muted);font-weight:600"></p>
+        <div id="admin-list"></div>
+        <button class="btn btn-danger" id="btn-delete-all" style="margin-top:auto">🗑 Borrar todos los turnos</button>
       </div>
 
-      <!-- Contador de turnos -->
-      <p class="admin-count" id="admin-count">0 turnos reservados</p>
+      <!-- Tab Servicios -->
+      <div class="drawer-body hidden" id="tab-services">
+        <p class="section-label">Servicios activos</p>
+        <div class="service-list-admin" id="admin-service-list"></div>
+        <p class="section-label" style="margin-top:6px">Agregar servicio</p>
+        <div class="add-service-form">
+          <div class="add-service-grid">
+            <div class="field-group">
+              <label class="field-label">Ícono (emoji)</label>
+              <input type="text"   id="ns-icon"     class="field-input" placeholder="💈" maxlength="2" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Nombre</label>
+              <input type="text"   id="ns-name"     class="field-input" placeholder="Corte" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Duración (min)</label>
+              <input type="number" id="ns-duration" class="field-input" placeholder="30" min="5" />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Precio ($)</label>
+              <input type="number" id="ns-price"    class="field-input" placeholder="2500" min="0" />
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-add-service">+ Agregar servicio</button>
+        </div>
+      </div>
 
-      <!-- Lista de turnos (generada en JS) -->
-      <div class="admin-list" id="admin-list"></div>
+      <!-- Tab Stats -->
+      <div class="drawer-body hidden" id="tab-stats">
+        <div class="stat-grid" id="stats-grid"></div>
+        <div id="stats-breakdown" style="margin-top:8px"></div>
+      </div>
 
-      <!-- Botón peligroso: borra TODOS los turnos -->
-      <button class="btn-delete-all" id="btn-delete-all">Borrar todos los turnos</button>
     </div>
   </div>
 
-  <!-- Cargar el JavaScript al final del body (buena práctica) -->
+  <script src="config.js"></script>
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
