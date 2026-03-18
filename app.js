@@ -14,12 +14,10 @@ let APP = {
 function init() {
   const businesses = getBusinesses().filter(b => b.active);
 
-  // Si hay un negocio fijo configurado, cargarlo directamente
-  // y OCULTAR el selector para que el cliente no pueda cambiar
   if (WHITE_LABEL.activeBusinessId) {
+    // Modo mono-cliente: cargar negocio fijo, ocultar selector
     const biz = getBusinessById(WHITE_LABEL.activeBusinessId);
     if (biz) loadBusiness(biz);
-    // El selector queda hidden (no se muestra)
   } else {
     // Modo multi-negocio: mostrar selector
     document.getElementById('biz-selector-wrap').classList.remove('hidden');
@@ -30,14 +28,26 @@ function init() {
   attachEvents();
 }
 
- 
-
 /* ── CARGAR NEGOCIO ──────────────────────────────────────────── */
 function loadBusiness(biz) {
   APP.currentBiz      = biz;
   APP.selectedService = null;
   APP.selectedDate    = null;
   APP.selectedSlot    = null;
+
+  // Aplicar tema del negocio
+  const root = document.documentElement;
+  const t    = biz.theme;
+  root.style.setProperty('--accent',         t.accent);
+  root.style.setProperty('--accent-light',   t.accentLight);
+  root.style.setProperty('--accent-dim',     t.accentDim);
+  root.style.setProperty('--bg-main',        t.bgMain);
+  root.style.setProperty('--bg-card',        t.bgCard);
+  root.style.setProperty('--bg-elevated',    t.bgElevated);
+  root.style.setProperty('--border',         t.border);
+  root.style.setProperty('--text-primary',   t.textPrimary);
+  root.style.setProperty('--text-secondary', t.textSecondary);
+  root.style.setProperty('--text-muted',     t.textMuted);
 
   // Header
   document.getElementById('brand-icon').textContent    = biz.emoji;
@@ -46,20 +56,6 @@ function loadBusiness(biz) {
   document.getElementById('biz-sel-emoji').textContent = biz.emoji;
   document.getElementById('biz-sel-label').textContent = biz.name;
   document.title = biz.name + ' — Turnos';
-
-// Aplicar tema del negocio
-const root = document.documentElement;
-const t = biz.theme;
-root.style.setProperty('--accent',         t.accent);
-root.style.setProperty('--accent-light',   t.accentLight);
-root.style.setProperty('--accent-dim',     t.accentDim);
-root.style.setProperty('--bg-main',        t.bgMain);
-root.style.setProperty('--bg-card',        t.bgCard);
-root.style.setProperty('--bg-elevated',    t.bgElevated);
-root.style.setProperty('--border',         t.border);
-root.style.setProperty('--text-primary',   t.textPrimary);
-root.style.setProperty('--text-secondary', t.textSecondary);
-root.style.setProperty('--text-muted',     t.textMuted);
 
   // Hero
   document.getElementById('hero-eyebrow').textContent  = biz.emoji + ' ' + biz.category;
@@ -80,7 +76,10 @@ root.style.setProperty('--text-muted',     t.textMuted);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ── RENDERS ─────────────────────────────────────────────────── */
+/* ================================================================
+   RENDERS
+================================================================ */
+
 function renderServices() {
   const grid     = document.getElementById('services-grid');
   const services = APP.currentBiz.services.filter(s => s.active !== false);
@@ -188,7 +187,10 @@ function renderConfirmModal(booking) {
   document.getElementById('modal-confirm').classList.remove('hidden');
 }
 
-/* ── ADMIN RENDERS ───────────────────────────────────────────── */
+/* ================================================================
+   ADMIN RENDERS
+================================================================ */
+
 function renderAdminTab(tab) {
   APP.adminTab = tab;
   document.querySelectorAll('.drawer-tab').forEach(t => {
@@ -310,6 +312,7 @@ function renderAdminStats() {
 }
 
 function renderBizDropdown() {
+  if (WHITE_LABEL.activeBusinessId) return;
   const dd = document.getElementById('biz-dropdown');
   dd.innerHTML = getBusinesses().filter(b => b.active).map(biz => `
     <button class="biz-dropdown-item ${biz.id === APP.currentBiz?.id ? 'active' : ''}" data-biz-id="${biz.id}">
@@ -323,7 +326,10 @@ function renderBizDropdown() {
   `).join('');
 }
 
-/* ── HELPERS UI ──────────────────────────────────────────────── */
+/* ================================================================
+   HELPERS UI
+================================================================ */
+
 function showSection(id) {
   const el = document.getElementById(id);
   el.classList.remove('hidden');
@@ -344,7 +350,10 @@ function showToast(msg, type) {
   setTimeout(() => t.remove(), 3000);
 }
 
-/* ── HANDLERS ────────────────────────────────────────────────── */
+/* ================================================================
+   HANDLERS
+================================================================ */
+
 function handleServiceClick(e) {
   const card = e.target.closest('.service-card');
   if (!card) return;
@@ -400,8 +409,8 @@ function handleConfirm() {
 
   const booking = addBooking(APP.currentBiz.id, {
     serviceId: APP.selectedService.id,
-    date: APP.selectedDate,
-    time: APP.selectedSlot,
+    date:  APP.selectedDate,
+    time:  APP.selectedSlot,
     name, phone, email, notes,
   });
 
@@ -423,21 +432,15 @@ function handleNewBooking() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ── ATTACH EVENTS ───────────────────────────────────────────── */
+/* ================================================================
+   ATTACH EVENTS
+================================================================ */
+
 function attachEvents() {
-  // Servicios
   document.getElementById('services-grid').addEventListener('click', handleServiceClick);
-
-  // Fecha
   document.getElementById('date-input').addEventListener('change', handleDateChange);
-
-  // Slots
   document.getElementById('slots-grid').addEventListener('click', handleSlotClick);
-
-  // Confirmar
   document.getElementById('btn-confirm').addEventListener('click', handleConfirm);
-
-  // Nueva reserva
   document.getElementById('btn-new-booking').addEventListener('click', handleNewBooking);
 
   // Admin: abrir
@@ -521,7 +524,7 @@ function attachEvents() {
 
   // Admin: agregar servicio
   document.getElementById('btn-add-service').addEventListener('click', () => {
-    const icon     = document.getElementById('ns-icon').value.trim()     || '⭐';
+    const icon     = document.getElementById('ns-icon').value.trim() || '⭐';
     const name     = document.getElementById('ns-name').value.trim();
     const duration = parseInt(document.getElementById('ns-duration').value);
     const price    = parseInt(document.getElementById('ns-price').value);
@@ -539,23 +542,25 @@ function attachEvents() {
     showToast('Servicio agregado ✓');
   });
 
-  // Selector de negocio
-  document.getElementById('biz-selector-btn').addEventListener('click', () => {
-    const dd = document.getElementById('biz-dropdown');
-    if (dd.classList.contains('hidden')) { renderBizDropdown(); dd.classList.remove('hidden'); }
-    else dd.classList.add('hidden');
-  });
-  document.getElementById('biz-dropdown').addEventListener('click', e => {
-    const item = e.target.closest('.biz-dropdown-item');
-    if (!item) return;
-    const biz = getBusinessById(item.dataset.bizId);
-    if (biz) { loadBusiness(biz); document.getElementById('biz-dropdown').classList.add('hidden'); }
-  });
-  document.addEventListener('click', e => {
-    const wrap = document.getElementById('biz-selector-wrap');
-    if (wrap && !wrap.contains(e.target))
-      document.getElementById('biz-dropdown').classList.add('hidden');
-  });
+  // Selector de negocio (solo en modo multi-negocio)
+  if (!WHITE_LABEL.activeBusinessId) {
+    document.getElementById('biz-selector-btn').addEventListener('click', () => {
+      const dd = document.getElementById('biz-dropdown');
+      if (dd.classList.contains('hidden')) { renderBizDropdown(); dd.classList.remove('hidden'); }
+      else dd.classList.add('hidden');
+    });
+    document.getElementById('biz-dropdown').addEventListener('click', e => {
+      const item = e.target.closest('.biz-dropdown-item');
+      if (!item) return;
+      const biz = getBusinessById(item.dataset.bizId);
+      if (biz) { loadBusiness(biz); document.getElementById('biz-dropdown').classList.add('hidden'); }
+    });
+    document.addEventListener('click', e => {
+      const wrap = document.getElementById('biz-selector-wrap');
+      if (wrap && !wrap.contains(e.target))
+        document.getElementById('biz-dropdown').classList.add('hidden');
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
