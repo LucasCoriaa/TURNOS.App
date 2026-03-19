@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenido</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #c9a84c;
+      --accent-light: #e2c97e;
+      --accent-dim:   rgba(201,168,76,0.15);
+      --bg:           #0e0e0e;
+      --text:         #f0ece4;
+      --text-sub:     #8a8580;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── FONDO ── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* Imagen de fondo — reemplazá 'tu-foto.jpg' por el nombre de tu imagen */
+    .bg-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    /* Overlay oscuro sobre la imagen para que el texto se lea bien */
+    .bg-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(14,14,14,0.3) 0%,
+        rgba(14,14,14,0.55) 40%,
+        rgba(14,14,14,0.85) 100%
+      );
+    }
+
+    /* Fallback si no hay imagen — degradado oscuro dorado */
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, rgba(201,168,76,0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.08) 0%, transparent 50%),
+                  linear-gradient(160deg, #0e0e0e 0%, #1a1410 100%);
+    }
+
+    /* ── CONTENIDO ── */
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 24px 52px;
+      text-align: center;
+    }
+
+    /* Logo / foto del negocio */
+    .logo-wrap {
+      margin-bottom: 24px;
+    }
+
+    /* Si tenés un logo en imagen, descomentá esto y ponés tu archivo */
+    /*
+    .logo-img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      object-fit: cover;
+      box-shadow: 0 0 30px rgba(201,168,76,0.3);
+    }
+    */
+
+    .logo-emoji {
+      font-size: 52px;
+      display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(201,168,76,0.25);
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 10vw, 64px);
+      font-weight: 700;
+      line-height: 1.05;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-sub);
+      font-weight: 300;
+      margin-bottom: 36px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* Botón principal */
+    .btn-reservar {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: #0e0e0e;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 24px rgba(201,168,76,0.35);
+      letter-spacing: 0.01em;
+      width: 100%;
+      max-width: 320px;
+      justify-content: center;
+    }
+
+    .btn-reservar:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(201,168,76,0.45);
+    }
+
+    .btn-reservar:active {
+      transform: translateY(0);
+    }
+
+    .btn-arrow {
+      font-size: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-reservar:hover .btn-arrow {
+      transform: translateX(4px);
+    }
+
+    /* Info del negocio (horario, dirección) */
+    .info-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .info-pill {
+      font-size: 12px;
+      color: var(--text-sub);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* Animación de entrada */
+    .content > * {
+      animation: fade-up 0.6s ease both;
+    }
+    .logo-wrap  { animation-delay: 0.1s; }
+    .badge      { animation-delay: 0.2s; }
+    .title      { animation-delay: 0.3s; }
+    .subtitle   { animation-delay: 0.4s; }
+    .btn-reservar { animation-delay: 0.5s; }
+    .info-pills { animation-delay: 0.6s; }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FONDO -->
+  <div class="bg-layer">
+    <!--
+      OPCIÓN A — Foto del local:
+      1. Copiá tu foto a esta misma carpeta
+      2. Reemplazá "tu-foto.jpg" por el nombre de tu archivo
+      3. Descomentá las líneas de abajo y borrá el div bg-gradient
+    -->
+    <!--
+    <img class="bg-image" src="tu-foto.jpg" alt="Local" />
+    <div class="bg-overlay"></div>
+    -->
+
+    <!-- OPCIÓN B — Sin foto (degradado oscuro) — borrá esto si usás foto -->
+    <div class="bg-gradient"></div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="content">
+
+    <div class="logo-wrap">
+      <!--
+        OPCIÓN A — Logo en imagen:
+        <img class="logo-img" src="logo.png" alt="Logo" />
+
+        OPCIÓN B — Emoji (cambiá por el que quieras):
+      -->
+      <span class="logo-emoji">💈</span>
+    </div>
+
+    <span class="badge" id="biz-category">Barbería profesional</span>
+
+    <h1 class="title" id="biz-name">Tu negocio</h1>
+
+    <p class="subtitle" id="biz-tagline">
+      Reservá tu turno de forma rápida y sencilla
+    </p>
+
+    <!-- Al hacer click va a index.html (la app de reservas) -->
+    <a class="btn-reservar" href="index.html">
+      Reservar turno <span class="btn-arrow">→</span>
+    </a>
+
+    <div class="info-pills" id="info-pills"></div>
+
+  </div>
+
+  <script src="config.js?v=7"></script>
+  <script src="db.js?v=7"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cargar datos del negocio activo
+      const bizId = WHITE_LABEL.activeBusinessId;
+      if (!bizId) return;
+
+      const biz = getBusinessById(bizId);
+      if (!biz) return;
+
+      // Actualizar textos
+      document.getElementById('biz-name').textContent     = biz.name;
+      document.getElementById('biz-category').textContent = biz.emoji + ' ' + biz.category;
+      document.getElementById('biz-tagline').textContent  = WHITE_LABEL.app.welcomeMessage;
+      document.title = biz.name;
+
+      // Aplicar color de acento del negocio
+      document.documentElement.style.setProperty('--accent',      biz.theme.accent);
+      document.documentElement.style.setProperty('--accent-light', biz.theme.accentLight);
+      document.documentElement.style.setProperty('--accent-dim',   biz.theme.accentDim);
+
+      // Pills de info (horario y dirección si existen)
+      const pills = [];
+      if (biz.schedule) {
+        const blocks = biz.schedule.blocks;
+        if (blocks) {
+          const horario = blocks.map(b => b.startHour + ':00 – ' + b.endHour + ':00').join(' / ');
+          pills.push('🕐 ' + horario);
+        } else if (biz.schedule.startHour !== undefined) {
+          pills.push('🕐 ' + biz.schedule.startHour + ':00 – ' + biz.schedule.endHour + ':00');
+        }
+      }
+      if (biz.address) pills.push('📍 ' + biz.address);
+
+      document.getElementById('info-pills').innerHTML =
+        pills.map(p => '<span class="info-pill">' + p + '</span>').join('');
+    });
+  </script>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 /* ================================================================
-   app.js — LÓGICA PRINCIPAL
+   app.js — LÓGICA PRINCIPAL (async/await para backend)
 ================================================================ */
 
 let APP = {
@@ -7,35 +7,56 @@ let APP = {
   selectedService: null,
   selectedDate:    null,
   selectedSlot:    null,
-  adminTab:        'bookings',
+  adminTab:        'today',
 };
 
 /* ── INIT ────────────────────────────────────────────────────── */
-function init() {
-  const businesses = getBusinesses().filter(b => b.active);
+async function init() {
+  try {
+    if (WHITE_LABEL.activeBusinessId) {
+      // Modo mono-cliente
+      const biz = await getBusinessById(WHITE_LABEL.activeBusinessId);
+      if (biz) await loadBusiness(biz);
+    } else {
+      // Modo multi-negocio
+      const businesses = await getBusinesses();
+      const active = businesses.filter(b => b.active);
+      document.getElementById('biz-selector-wrap').classList.remove('hidden');
+      if (active.length > 0) await loadBusiness(active[0]);
+    }
 
-  if (WHITE_LABEL.activeBusinessId) {
-    // Modo mono-cliente: cargar negocio fijo, ocultar selector
-    const biz = getBusinessById(WHITE_LABEL.activeBusinessId);
-    if (biz) loadBusiness(biz);
-  } else {
-    // Modo multi-negocio: mostrar selector
-    document.getElementById('biz-selector-wrap').classList.remove('hidden');
-    if (businesses.length > 0) loadBusiness(businesses[0]);
+    document.getElementById('date-input').min = todayString();
+    attachEvents();
+  } catch (err) {
+    console.error('Error iniciando la app:', err);
+    showToast('Error conectando al servidor. Verificá que esté corriendo.', 'error');
   }
-
-  document.getElementById('date-input').min = todayString();
-  attachEvents();
 }
 
 /* ── CARGAR NEGOCIO ──────────────────────────────────────────── */
-function loadBusiness(biz) {
+async function loadBusiness(biz) {
+  // El backend devuelve schedule y theme como objetos ya parseados
+  // pero a veces vienen como string JSON — los parseamos si hace falta
+  if (typeof biz.schedule === 'string') biz.schedule = JSON.parse(biz.schedule);
+  if (typeof biz.theme    === 'string') biz.theme    = JSON.parse(biz.theme);
+
+  // Cargar servicios del negocio desde el backend
+  const services = await getServices(biz.id);
+  biz.services = services.map(s => ({
+    id:       String(s.id),
+    name:     s.name,
+    duration: s.duration,
+    price:    s.price,
+    icon:     s.icon,
+    active:   s.active,
+  }));
+
   APP.currentBiz      = biz;
   APP.selectedService = null;
   APP.selectedDate    = null;
   APP.selectedSlot    = null;
 
-  // Aplicar tema del negocio
+  // Aplicar tema
   const root = document.documentElement;
   const t    = biz.theme;
   root.style.setProperty('--accent',         t.accent);
@@ -101,7 +122,7 @@ function renderServices() {
   `).join('');
 }
 
-function renderSlots() {
+async function renderSlots() {
   const grid    = document.getElementById('slots-grid');
   const hint    = document.getElementById('slots-hint');
   const { currentBiz, selectedDate, selectedService } = APP;
@@ -118,12 +139,28 @@ function renderSlots() {
     return;
   }
 
+  // Verificar fecha bloqueada
+  const blocked = await isDateBlocked(currentBiz.id, selectedDate);
+  if (blocked) {
+    const blockedDates = await getBlockedDates(currentBiz.id);
+    const found = blockedDates.find(d => {
+      const dbDate = d.date.includes('T') ? d.date.split('T')[0] : d.date;
+      return dbDate === selectedDate;
+    });
+    hint.textContent = '🚫 ' + (found?.reason || 'Día no disponible');
+    grid.innerHTML = '';
+    return;
+  }
+
   hint.textContent = 'Horarios disponibles:';
 
-  const allSlots   = generateSlots(currentBiz.schedule);
-  const takenTimes = getBookings(currentBiz.id)
-    .filter(b => b.date === selectedDate && b.serviceId === selectedService.id && b.status !== 'cancelled')
-    .map(b => b.time);
+  const allSlots = generateSlots(currentBiz.schedule);
+
+  // Obtener turnos ocupados desde el backend
+  const bookings = await getBookings(currentBiz.id, selectedDate);
+  const takenTimes = bookings
+    .filter(b => String(b.service_id) === String(selectedService.id) && b.status !== 'cancelled')
+    .map(b => b.time.substring(0, 5)); // HH:MM
 
   const nowMinutes = selectedDate === todayString()
     ? new Date().getHours() * 60 + new Date().getMinutes()
@@ -157,16 +194,16 @@ function renderSelectionPills() {
 }
 
 function renderConfirmModal(booking) {
-  const svc   = APP.currentBiz.services.find(s => s.id === booking.serviceId);
+  const svc   = APP.currentBiz.services.find(s => String(s.id) === String(booking.service_id || booking.serviceId));
   const phone = APP.currentBiz.phone || WHITE_LABEL.app.whatsappNumber;
 
   document.getElementById('modal-details').innerHTML = `
     <div class="row"><span class="label">Cliente</span> <span class="value">${booking.name}</span></div>
     <div class="row"><span class="label">Teléfono</span><span class="value">${booking.phone}</span></div>
     ${booking.email ? `<div class="row"><span class="label">Email</span><span class="value">${booking.email}</span></div>` : ''}
-    <div class="row"><span class="label">Servicio</span><span class="value">${svc?.icon} ${svc?.name}</span></div>
+    <div class="row"><span class="label">Servicio</span><span class="value">${svc?.icon || ''} ${svc?.name || ''}</span></div>
     <div class="row"><span class="label">Fecha</span>   <span class="value">${formatDate(booking.date, WHITE_LABEL.app.locale)}</span></div>
-    <div class="row"><span class="label">Hora</span>    <span class="value">${booking.time} hs</span></div>
+    <div class="row"><span class="label">Hora</span>    <span class="value">${booking.time?.substring(0,5)} hs</span></div>
     ${booking.notes ? `<div class="row"><span class="label">Notas</span><span class="value">${booking.notes}</span></div>` : ''}
   `;
 
@@ -177,7 +214,7 @@ function renderConfirmModal(booking) {
     '───────────────────',
     '📋 *Servicio:* ' + (svc?.name || ''),
     '📅 *Fecha:* ' + formatDate(booking.date, WHITE_LABEL.app.locale),
-    '🕐 *Hora:* ' + booking.time + ' hs',
+    '🕐 *Hora:* ' + booking.time?.substring(0,5) + ' hs',
     '───────────────────',
     booking.notes ? '📝 *Nota:* ' + booking.notes : '',
     '',
@@ -187,24 +224,10 @@ function renderConfirmModal(booking) {
   document.getElementById('btn-whatsapp').href =
     'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
 
-  // Mostrar modal
   const modal = document.getElementById('modal-confirm');
   modal.classList.remove('hidden');
   modal.style.display = 'flex';
 }
-
-/* El mensaje va a quedar así en WhatsApp: */
-
-/*💈 LuchitoRealG4Life
-¡Hola Juan! Tu turno está confirmado 🎉
-
-───────────────────
-📋 Servicio: Corte clásico
-📅 Fecha: viernes 21 de marzo de 2025
-🕐 Hora: 11:00 hs
-───────────────────
-
-/*Te esperamos. Ante cualquier cambio avisanos con anticipación. ¡Gracias! 🙌*/
 
 /* ================================================================
    ADMIN RENDERS
@@ -215,23 +238,26 @@ function renderAdminTab(tab) {
   document.querySelectorAll('.drawer-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
-  ['bookings','services','stats'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+  ['bookings','services','stats','today','blocked'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('hidden', t !== tab);
   });
   if (tab === 'bookings') renderAdminBookings();
   if (tab === 'services') renderAdminServices();
   if (tab === 'stats')    renderAdminStats();
+  if (tab === 'today')    renderTodayView();
+  if (tab === 'blocked')  renderAdminBlocked();
 }
 
-function renderAdminBookings(filterDate) {
-  let bookings = getBookings(APP.currentBiz.id);
+async function renderAdminBookings(filterDate) {
+  const bookings = await getBookings(APP.currentBiz.id, filterDate || null);
   bookings.sort((a, b) => (a.date + a.time > b.date + b.time ? 1 : -1));
-  if (filterDate) bookings = bookings.filter(b => b.date === filterDate);
 
-  document.getElementById('admin-count').textContent =
-    bookings.length + ' turno' + (bookings.length !== 1 ? 's' : '');
+  const countEl = document.getElementById('admin-count-all');
+  const list    = document.getElementById('admin-list-all');
+  if (!countEl || !list) return;
 
-  const list = document.getElementById('admin-list');
+  countEl.textContent = bookings.length + ' turno' + (bookings.length !== 1 ? 's' : '');
 
   if (bookings.length === 0) {
     list.innerHTML = '<div class="empty-state"><span class="empty-icon">📋</span>No hay turnos.</div>';
@@ -239,15 +265,16 @@ function renderAdminBookings(filterDate) {
   }
 
   list.innerHTML = bookings.map(bk => {
-    const svc = APP.currentBiz.services.find(s => s.id === bk.serviceId);
+    const svc = APP.currentBiz.services.find(s => String(s.id) === String(bk.service_id));
+    const dateStr = bk.date.includes('T') ? bk.date.split('T')[0] : bk.date;
     return `
       <div class="booking-card">
         <div class="bc-top">
           <span class="bc-name">${bk.name}</span>
-          <span class="bc-badge">${svc?.icon || ''} ${svc?.name || bk.serviceId}</span>
+          <span class="bc-badge">${svc?.icon || ''} ${svc?.name || ''}</span>
           <button class="bc-delete-btn" data-booking-id="${bk.id}">✕</button>
         </div>
-        <div class="bc-datetime">📅 ${formatDate(bk.date, WHITE_LABEL.app.locale)} · 🕐 ${bk.time} hs</div>
+        <div class="bc-datetime">📅 ${formatDate(dateStr, WHITE_LABEL.app.locale)} · 🕐 ${bk.time?.substring(0,5)} hs</div>
         <div class="bc-contact">📱 ${bk.phone}${bk.email ? ' · ' + bk.email : ''}</div>
         ${bk.notes ? '<div class="bc-notes">💬 ' + bk.notes + '</div>' : ''}
       </div>
@@ -259,7 +286,7 @@ function renderAdminServices() {
   const biz  = APP.currentBiz;
   const list = document.getElementById('admin-service-list');
 
-  if (biz.services.length === 0) {
+  if (!biz.services || biz.services.length === 0) {
     list.innerHTML = '<div class="empty-state"><span class="empty-icon">📋</span>No hay servicios.</div>';
     return;
   }
@@ -277,13 +304,13 @@ function renderAdminServices() {
   `).join('');
 }
 
-function renderAdminStats() {
-  const bookings = getBookings(APP.currentBiz.id);
+async function renderAdminStats() {
+  const bookings = await getBookings(APP.currentBiz.id);
   const today    = todayString();
 
   let revenue = 0;
   bookings.forEach(bk => {
-    const svc = APP.currentBiz.services.find(s => s.id === bk.serviceId);
+    const svc = APP.currentBiz.services.find(s => String(s.id) === String(bk.service_id));
     if (svc) revenue += svc.price;
   });
 
@@ -293,7 +320,10 @@ function renderAdminStats() {
       <div class="stat-label">Total</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number">${bookings.filter(b => b.date === today).length}</div>
+      <div class="stat-number">${bookings.filter(b => {
+        const d = b.date.includes('T') ? b.date.split('T')[0] : b.date;
+        return d === today;
+      }).length}</div>
       <div class="stat-label">Hoy</div>
     </div>
     <div class="stat-card">
@@ -308,12 +338,12 @@ function renderAdminStats() {
   }
 
   const breakdown = {};
-  bookings.forEach(bk => { breakdown[bk.serviceId] = (breakdown[bk.serviceId] || 0) + 1; });
+  bookings.forEach(bk => { breakdown[bk.service_id] = (breakdown[bk.service_id] || 0) + 1; });
 
   document.getElementById('stats-breakdown').innerHTML =
     '<p class="section-label" style="margin-bottom:10px">Por servicio</p>' +
     Object.entries(breakdown).sort((a,b) => b[1]-a[1]).map(([id, count]) => {
-      const svc = APP.currentBiz.services.find(s => s.id === id);
+      const svc = APP.currentBiz.services.find(s => String(s.id) === String(id));
       const pct = Math.round(count / bookings.length * 100);
       return `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -330,10 +360,72 @@ function renderAdminStats() {
     }).join('');
 }
 
-function renderBizDropdown() {
+async function renderTodayView() {
+  const today    = todayString();
+  const bookings = await getBookings(APP.currentBiz.id, today);
+  bookings.sort((a, b) => a.time > b.time ? 1 : -1);
+
+  const list  = document.getElementById('admin-list');
+  const count = document.getElementById('admin-count');
+  if (!list || !count) return;
+
+  count.textContent = bookings.length + ' turno' + (bookings.length !== 1 ? 's' : '') + ' hoy';
+
+  if (bookings.length === 0) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">☀️</span>No hay turnos para hoy.</div>';
+    return;
+  }
+
+  const now = new Date();
+  list.innerHTML = bookings.map(bk => {
+    const svc    = APP.currentBiz.services.find(s => String(s.id) === String(bk.service_id));
+    const [h, m] = bk.time.split(':').map(Number);
+    const isPast = h * 60 + m < now.getHours() * 60 + now.getMinutes();
+    return `
+      <div class="booking-card" style="${isPast ? 'opacity:0.5' : ''}">
+        <div class="bc-top">
+          <span class="bc-name">${bk.time?.substring(0,5)} hs — ${bk.name}</span>
+          <span class="bc-badge">${svc?.icon || ''} ${svc?.name || ''}</span>
+          <button class="bc-delete-btn" data-booking-id="${bk.id}">✕</button>
+        </div>
+        <div class="bc-contact">📱 ${bk.phone}${bk.notes ? ' · ' + bk.notes : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function renderAdminBlocked() {
+  const blocked = await getBlockedDates(APP.currentBiz.id);
+  const list    = document.getElementById('blocked-list');
+  const count   = document.getElementById('blocked-count');
+  if (!list || !count) return;
+
+  count.textContent = blocked.length + ' fecha' + (blocked.length !== 1 ? 's' : '') + ' bloqueada' + (blocked.length !== 1 ? 's' : '');
+
+  if (blocked.length === 0) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span>No hay fechas bloqueadas.</div>';
+    return;
+  }
+
+  list.innerHTML = blocked.map(d => {
+    const dateStr = d.date.includes('T') ? d.date.split('T')[0] : d.date;
+    return `
+      <div class="booking-card">
+        <div class="bc-top">
+          <span class="bc-name">📅 ${formatDate(dateStr, WHITE_LABEL.app.locale)}</span>
+          <button class="bc-delete-btn" data-unblock-date="${dateStr}" title="Desbloquear">✕</button>
+        </div>
+        <div class="bc-contact">🚫 ${d.reason}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function renderBizDropdown() {
   if (WHITE_LABEL.activeBusinessId) return;
+  const businesses = await getBusinesses();
   const dd = document.getElementById('biz-dropdown');
-  dd.innerHTML = getBusinesses().filter(b => b.active).map(biz => `
+  dd.innerHTML = businesses.filter(b => b.active).map(biz => `
     <button class="biz-dropdown-item ${biz.id === APP.currentBiz?.id ? 'active' : ''}" data-biz-id="${biz.id}">
       <span class="biz-emoji">${biz.emoji}</span>
       <div class="biz-info">
@@ -376,7 +468,7 @@ function showToast(msg, type) {
 function handleServiceClick(e) {
   const card = e.target.closest('.service-card');
   if (!card) return;
-  const svc = APP.currentBiz.services.find(s => s.id === card.dataset.serviceId);
+  const svc = APP.currentBiz.services.find(s => String(s.id) === card.dataset.serviceId);
   if (!svc) return;
   APP.selectedService = svc;
   APP.selectedSlot    = null;
@@ -386,23 +478,23 @@ function handleServiceClick(e) {
   document.getElementById('step-datetime').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function handleDateChange(e) {
+async function handleDateChange(e) {
   APP.selectedDate = e.target.value;
   APP.selectedSlot = null;
-  renderSlots();
+  await renderSlots();
 }
 
-function handleSlotClick(e) {
+async function handleSlotClick(e) {
   const btn = e.target.closest('.slot-btn');
   if (!btn || btn.disabled) return;
   APP.selectedSlot = btn.dataset.time;
-  renderSlots();
+  await renderSlots();
   showSection('step-form');
   renderSelectionPills();
   document.getElementById('step-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   const name  = document.getElementById('inp-name').value.trim();
   const phone = document.getElementById('inp-phone').value.trim();
   const email = document.getElementById('inp-email').value.trim();
@@ -419,21 +511,24 @@ function handleConfirm() {
   check('inp-phone', 'err-phone', phone.replace(/\D/g,'').length < 7);
   if (!ok) return;
 
-  if (isSlotTaken(APP.currentBiz.id, APP.selectedDate, APP.selectedService.id, APP.selectedSlot)) {
-    showToast('⚠️ Este horario acaba de ser reservado. Elegí otro.', 'error');
-    renderSlots();
-    hideSection('step-form');
-    return;
+  try {
+    const booking = await addBooking(APP.currentBiz.id, {
+      serviceId: APP.selectedService.id,
+      date:      APP.selectedDate,
+      time:      APP.selectedSlot,
+      name, phone, email, notes,
+    });
+
+    renderConfirmModal(booking);
+  } catch (err) {
+    if (err.message.includes('ya está reservado')) {
+      showToast('⚠️ Este horario acaba de ser reservado. Elegí otro.', 'error');
+      await renderSlots();
+      hideSection('step-form');
+    } else {
+      showToast('Error al confirmar el turno: ' + err.message, 'error');
+    }
   }
-
-  const booking = addBooking(APP.currentBiz.id, {
-    serviceId: APP.selectedService.id,
-    date:  APP.selectedDate,
-    time:  APP.selectedSlot,
-    name, phone, email, notes,
-  });
-
-  renderConfirmModal(booking);
 }
 
 function handleNewBooking() {
@@ -470,7 +565,7 @@ function attachEvents() {
       return;
     }
     document.getElementById('admin-overlay').classList.remove('hidden');
-    renderAdminTab('bookings');
+    renderAdminTab('today');
   });
 
   // Admin: cerrar
@@ -496,45 +591,57 @@ function attachEvents() {
     renderAdminBookings(null);
   });
 
-  // Admin: eliminar turno
-  document.getElementById('admin-list').addEventListener('click', e => {
+  // Admin: eliminar turno (tab hoy)
+  document.getElementById('admin-list').addEventListener('click', async e => {
     const btn = e.target.closest('.bc-delete-btn');
-    if (!btn) return;
+    if (!btn || !btn.dataset.bookingId) return;
     if (!confirm('¿Eliminar este turno?')) return;
-    deleteBooking(APP.currentBiz.id, btn.dataset.bookingId);
+    await deleteBooking(APP.currentBiz.id, btn.dataset.bookingId);
+    renderTodayView();
+    showToast('Turno eliminado');
+  });
+
+  // Admin: eliminar turno (tab todos)
+  document.getElementById('admin-list-all').addEventListener('click', async e => {
+    const btn = e.target.closest('.bc-delete-btn');
+    if (!btn || !btn.dataset.bookingId) return;
+    if (!confirm('¿Eliminar este turno?')) return;
+    await deleteBooking(APP.currentBiz.id, btn.dataset.bookingId);
     const f = document.getElementById('admin-date-filter').value || null;
     renderAdminBookings(f);
     showToast('Turno eliminado');
   });
 
   // Admin: borrar todos
-  document.getElementById('btn-delete-all').addEventListener('click', () => {
-    const n = getBookings(APP.currentBiz.id).length;
-    if (n === 0) { showToast('No hay turnos', 'error'); return; }
-    if (!confirm('¿Borrar los ' + n + ' turnos de ' + APP.currentBiz.name + '?')) return;
-    deleteAllBookings(APP.currentBiz.id);
+  document.getElementById('btn-delete-all').addEventListener('click', async () => {
+    const bookings = await getBookings(APP.currentBiz.id);
+    if (bookings.length === 0) { showToast('No hay turnos', 'error'); return; }
+    if (!confirm('¿Borrar todos los turnos de ' + APP.currentBiz.name + '?')) return;
+    await deleteAllBookings(APP.currentBiz.id);
     renderAdminBookings();
+    renderTodayView();
     showToast('Todos los turnos eliminados');
   });
 
   // Admin: toggle/eliminar servicio
-  document.getElementById('admin-service-list').addEventListener('click', e => {
+  document.getElementById('admin-service-list').addEventListener('click', async e => {
     const tog = e.target.closest('.toggle-active');
     if (tog) {
-      const svc = APP.currentBiz.services.find(s => s.id === tog.dataset.serviceId);
+      const svc = APP.currentBiz.services.find(s => String(s.id) === tog.dataset.serviceId);
       if (!svc) return;
-      updateService(APP.currentBiz.id, svc.id, { active: svc.active === false });
-      APP.currentBiz = getBusinessById(APP.currentBiz.id);
+      await updateService(APP.currentBiz.id, svc.id, { active: !svc.active });
+      const updated = await getBusinessById(APP.currentBiz.id);
+      await loadBusiness(updated);
       renderAdminServices();
-      renderServices();
-      showToast(svc.active === false ? 'Servicio activado' : 'Servicio desactivado');
+      showToast(svc.active ? 'Servicio desactivado' : 'Servicio activado');
       return;
     }
     const del = e.target.closest('[data-delete-service-id]');
     if (del) {
       if (!confirm('¿Eliminar este servicio?')) return;
-      deleteService(APP.currentBiz.id, del.dataset.deleteServiceId);
-      APP.currentBiz = getBusinessById(APP.currentBiz.id);
+      await deleteService(APP.currentBiz.id, del.dataset.deleteServiceId);
+      const updated = await getBusinessById(APP.currentBiz.id);
+      await loadBusiness(updated);
       renderAdminServices();
       renderServices();
       showToast('Servicio eliminado');
@@ -542,7 +649,7 @@ function attachEvents() {
   });
 
   // Admin: agregar servicio
-  document.getElementById('btn-add-service').addEventListener('click', () => {
+  document.getElementById('btn-add-service').addEventListener('click', async () => {
     const icon     = document.getElementById('ns-icon').value.trim() || '⭐';
     const name     = document.getElementById('ns-name').value.trim();
     const duration = parseInt(document.getElementById('ns-duration').value);
@@ -551,8 +658,9 @@ function attachEvents() {
       showToast('Completá todos los campos', 'error');
       return;
     }
-    addService(APP.currentBiz.id, { icon, name, duration, price, active: true });
-    APP.currentBiz = getBusinessById(APP.currentBiz.id);
+    await addService(APP.currentBiz.id, { icon, name, duration, price });
+    const updated = await getBusinessById(APP.currentBiz.id);
+    await loadBusiness(updated);
     ['ns-icon','ns-name','ns-duration','ns-price'].forEach(id => {
       document.getElementById(id).value = '';
     });
@@ -561,18 +669,41 @@ function attachEvents() {
     showToast('Servicio agregado ✓');
   });
 
-  // Selector de negocio (solo en modo multi-negocio)
+  // Fechas bloqueadas: agregar
+  document.getElementById('btn-add-blocked').addEventListener('click', async () => {
+    const date   = document.getElementById('blocked-date-input').value;
+    const reason = document.getElementById('blocked-reason-input').value.trim() || 'Día no disponible';
+    if (!date) { showToast('Seleccioná una fecha', 'error'); return; }
+    if (date < todayString()) { showToast('No podés bloquear fechas pasadas', 'error'); return; }
+    await addBlockedDate(APP.currentBiz.id, date, reason);
+    document.getElementById('blocked-date-input').value   = '';
+    document.getElementById('blocked-reason-input').value = '';
+    renderAdminBlocked();
+    showToast('Fecha bloqueada ✓');
+  });
+
+  // Fechas bloqueadas: eliminar
+  document.getElementById('blocked-list').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-unblock-date]');
+    if (!btn) return;
+    if (!confirm('¿Desbloquear esta fecha?')) return;
+    await removeBlockedDate(APP.currentBiz.id, btn.dataset.unblockDate);
+    renderAdminBlocked();
+    showToast('Fecha desbloqueada');
+  });
+
+  // Selector de negocio (solo multi-negocio)
   if (!WHITE_LABEL.activeBusinessId) {
-    document.getElementById('biz-selector-btn').addEventListener('click', () => {
+    document.getElementById('biz-selector-btn').addEventListener('click', async () => {
       const dd = document.getElementById('biz-dropdown');
-      if (dd.classList.contains('hidden')) { renderBizDropdown(); dd.classList.remove('hidden'); }
+      if (dd.classList.contains('hidden')) { await renderBizDropdown(); dd.classList.remove('hidden'); }
       else dd.classList.add('hidden');
     });
-    document.getElementById('biz-dropdown').addEventListener('click', e => {
+    document.getElementById('biz-dropdown').addEventListener('click', async e => {
       const item = e.target.closest('.biz-dropdown-item');
       if (!item) return;
-      const biz = getBusinessById(item.dataset.bizId);
-      if (biz) { loadBusiness(biz); document.getElementById('biz-dropdown').classList.add('hidden'); }
+      const biz = await getBusinessById(item.dataset.bizId);
+      if (biz) { await loadBusiness(biz); document.getElementById('biz-dropdown').classList.add('hidden'); }
     });
     document.addEventListener('click', e => {
       const wrap = document.getElementById('biz-selector-wrap');
