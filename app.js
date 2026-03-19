@@ -171,21 +171,40 @@ function renderConfirmModal(booking) {
   `;
 
   const msg = [
-    '✅ *Turno confirmado — ' + APP.currentBiz.name + '*',
+    '💈 *' + APP.currentBiz.name + '*',
+    '¡Hola ' + booking.name + '! Tu turno está confirmado 🎉',
     '',
-    '👤 *Cliente:* ' + booking.name,
-    '📱 *Teléfono:* ' + booking.phone,
-    (svc?.icon || '') + ' *Servicio:* ' + (svc?.name || ''),
+    '───────────────────',
+    '📋 *Servicio:* ' + (svc?.name || ''),
     '📅 *Fecha:* ' + formatDate(booking.date, WHITE_LABEL.app.locale),
     '🕐 *Hora:* ' + booking.time + ' hs',
-    booking.notes ? '📝 *Notas:* ' + booking.notes : '',
+    '───────────────────',
+    booking.notes ? '📝 *Nota:* ' + booking.notes : '',
+    '',
+    'Te esperamos. Ante cualquier cambio avisanos con anticipación. ¡Gracias! 🙌',
   ].filter(Boolean).join('\n');
 
   document.getElementById('btn-whatsapp').href =
     'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
 
-  document.getElementById('modal-confirm').classList.remove('hidden');
+  // Mostrar modal
+  const modal = document.getElementById('modal-confirm');
+  modal.classList.remove('hidden');
+  modal.style.display = 'flex';
 }
+
+/* El mensaje va a quedar así en WhatsApp: */
+
+/*💈 LuchitoRealG4Life
+¡Hola Juan! Tu turno está confirmado 🎉
+
+───────────────────
+📋 Servicio: Corte clásico
+📅 Fecha: viernes 21 de marzo de 2025
+🕐 Hora: 11:00 hs
+───────────────────
+
+/*Te esperamos. Ante cualquier cambio avisanos con anticipación. ¡Gracias! 🙌*/
 
 /* ================================================================
    ADMIN RENDERS

@@ -7,7 +7,7 @@ const SEED_BUSINESSES = [
      id:       'biz_001',
     name:     'LuchitoRealG4Life',
     category: 'Barbería',
-    emoji:    '✂️',
+    emoji:    '☠️',
     phone:    '5493513824513',
     address:  '',
     active:   true,
@@ -24,9 +24,9 @@ const SEED_BUSINESSES = [
       workDays:    [ 3, 4, 5, 6],
     },
     services: [
-      { id: 's1', name: 'Corte clásico',   duration: 30, price: 2500,  icon: '✂️', active: true },
-      { id: 's2', name: 'Corte + Barba',   duration: 50, price: 3800,  icon: '⚡', active: true },
-      { id: 's3', name: 'Coloración',      duration: 90, price: 6000,  icon: '🎨', active: true },
+      { id: 's1', name: 'Corte clásico',   duration: 40, price: 10000,  icon: '💈', active: true },
+      { id: 's2', name: 'Corte + Barba',   duration: 45, price: 11000,  icon: '✂️', active: true },
+      { id: 's3', name: 'Coloración',      duration: 120, price: 32000,  icon: '🎨', active: true },
       { id: 's4', name: 'Corte para niños',duration: 30, price: 10000, icon: '👦', active: true },
     ],
     theme: {
@@ -116,7 +116,7 @@ const SEED_BUSINESSES = [
    Cambiá DATA_VERSION cada vez que modifiques SEED_BUSINESSES.
    El navegador va a detectar el cambio y limpiar el caché solo.
 ───────────────────────────────────────────────────────────────────── */
-const DATA_VERSION = 'v6';
+const DATA_VERSION = 'v9';
 
 if (localStorage.getItem('rf_data_version') !== DATA_VERSION) {
   localStorage.clear();
