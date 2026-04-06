@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../BACKENDturnos.barberia"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "TURNOS.APP.barberia"
+	}
+}

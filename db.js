@@ -6,7 +6,7 @@
 ================================================================ */
 
 // URL del backend — en local usa localhost, en producción usa Render
-const API = 'https://turnos-bakend.onrender.com/api';  // ← cambiás esto cuando subas a Render
+const API = 'http://localhost:3000/api';  // ← cambiás esto cuando subas a Render
 
 /* ── Helper para llamadas fetch ──────────────────────────────── */
 async function api(method, path, body) {
