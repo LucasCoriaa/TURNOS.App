@@ -1,24 +1,11 @@
-/* ================================================================
-   config.js — CONFIGURACIÓN WHITE LABEL
-   
-   Este es el ÚNICO archivo que cambiás para adaptar el sistema
-   a un nuevo cliente. El resto del código nunca se toca.
-   
-   PARA VENDER A UN NUEVO CLIENTE:
-   1. Duplicás la carpeta del proyecto
-   2. Editás solo este archivo
-   3. Subís a hosting (Netlify, Vercel, etc. — gratis)
-   4. Listo: el cliente tiene su propio sistema con su marca
-================================================================ */
-
 const WHITE_LABEL = {
   product: {
     name:    'Turnos',
-    version: '3.0.0',
+    version: '4.0.0',
   },
-  activeBusinessId: "biz_001", // null = multi-negocio
+  activeBusinessId: null,
   app: {
-    whatsappNumber: '5493513824513',
+   whatsappNumber: '5493512002732',
     maxAdvanceDays: 30,
     showPrices:     true,
     showDuration:   true,
@@ -27,3 +14,12 @@ const WHITE_LABEL = {
     adminPassword:  '1234',
   },
 };
+
+function getBarberIdFromUrl() {
+  const path = window.location.pathname;
+  const parts = path.split('/').filter(Boolean);
+  return parts[0] || null;
+}
+
+const BARBER_ID = getBarberIdFromUrl();
+if (BARBER_ID) WHITE_LABEL.activeBusinessId = BARBER_ID;
