@@ -247,6 +247,7 @@ function renderAdminTab(tab) {
   if (tab === 'stats')    renderAdminStats();
   if (tab === 'today')    renderTodayView();
   if (tab === 'blocked')  renderAdminBlocked();
+  if (tab === 'config')   renderAdminConfig();
 }
 
 async function renderAdminBookings(filterDate) {
@@ -419,6 +420,113 @@ async function renderAdminBlocked() {
       </div>
     `;
   }).join('');
+}
+async function renderAdminConfig() {
+  const biz  = APP.currentBiz;
+  const wrap = document.getElementById('tab-config');
+  if (!wrap) return;
+
+  const schedule = biz.schedule;
+  const dias = [
+    { label: 'Dom', value: 0 },
+    { label: 'Lun', value: 1 },
+    { label: 'Mar', value: 2 },
+    { label: 'Mié', value: 3 },
+    { label: 'Jue', value: 4 },
+    { label: 'Vie', value: 5 },
+    { label: 'Sáb', value: 6 },
+  ];
+
+  wrap.innerHTML = `
+    <p class="section-label">Información del negocio</p>
+    <div class="add-service-form">
+      <div class="field-group">
+        <label class="field-label">Nombre de la barbería</label>
+        <input type="text" id="cfg-name" class="field-input" value="${biz.name}" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Número de WhatsApp (con código de país)</label>
+        <input type="text" id="cfg-phone" class="field-input" value="${biz.phone || ''}" placeholder="5493512345678" />
+      </div>
+    </div>
+
+    <p class="section-label" style="margin-top:12px">Días laborables</p>
+    <div class="add-service-form">
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${dias.map(d => `
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-primary);cursor:pointer">
+            <input type="checkbox" value="${d.value}"
+              ${schedule.workDays.includes(d.value) ? 'checked' : ''}
+              style="accent-color:var(--accent);width:16px;height:16px" />
+            ${d.label}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    <p class="section-label" style="margin-top:12px">Horario de atención</p>
+    <div class="add-service-form">
+      ${(schedule.blocks || [{ startHour: schedule.startHour, endHour: schedule.endHour }]).map((block, i) => `
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Desde</label>
+            <input type="number" id="cfg-start-${i}" class="field-input" value="${block.startHour}" min="0" max="23" />
+          </div>
+          <div class="field-group" style="flex:1">
+            <label class="field-label">Hasta</label>
+            <input type="number" id="cfg-end-${i}" class="field-input" value="${block.endHour}" min="0" max="23" />
+          </div>
+        </div>
+      `).join('')}
+      <div class="field-group">
+        <label class="field-label">Duración de cada turno (minutos)</label>
+        <input type="number" id="cfg-slot" class="field-input" value="${schedule.slotMinutes}" min="10" max="120" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" id="btn-save-config" style="margin-top:16px">
+      Guardar cambios
+    </button>
+    <p id="cfg-msg" style="font-size:13px;text-align:center;margin-top:8px;min-height:20px"></p>
+  `;
+
+  document.getElementById('btn-save-config').addEventListener('click', async () => {
+    const btn  = document.getElementById('btn-save-config');
+    const msg  = document.getElementById('cfg-msg');
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>&nbsp; Guardando...';
+
+    const name  = document.getElementById('cfg-name').value.trim();
+    const phone = document.getElementById('cfg-phone').value.trim();
+
+    const workDays = Array.from(
+      document.querySelectorAll('#tab-config input[type="checkbox"]:checked')
+    ).map(cb => parseInt(cb.value));
+
+    const blocks = (schedule.blocks || [{}]).map((_, i) => ({
+      startHour: parseInt(document.getElementById('cfg-start-' + i)?.value || 9),
+      endHour:   parseInt(document.getElementById('cfg-end-'   + i)?.value || 20),
+    }));
+
+    const slotMinutes = parseInt(document.getElementById('cfg-slot').value);
+
+    try {
+      const updated = await api('PATCH', '/businesses/' + APP.currentBiz.id, {
+        name,
+        phone,
+        schedule: { workDays, slotMinutes, blocks },
+      });
+      await loadBusiness(updated);
+      msg.style.color = '#4ade80';
+      msg.textContent = '✓ Cambios guardados correctamente';
+    } catch (e) {
+      msg.style.color = '#f87171';
+      msg.textContent = '✗ Error al guardar: ' + e.message;
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = 'Guardar cambios';
+    }
+  });
 }
 
 async function renderBizDropdown() {
