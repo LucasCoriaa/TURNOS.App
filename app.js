@@ -238,7 +238,7 @@ function renderAdminTab(tab) {
   document.querySelectorAll('.drawer-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
-  ['bookings','services','stats','today','blocked'].forEach(t => {
+ ['bookings','services','stats','today','blocked','config'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (el) el.classList.toggle('hidden', t !== tab);
   });
